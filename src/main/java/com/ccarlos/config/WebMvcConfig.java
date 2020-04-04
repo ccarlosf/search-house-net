@@ -12,11 +12,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import org.thymeleaf.spring4.SpringTemplateEngine;
 import org.thymeleaf.spring4.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.spring4.view.ThymeleafViewResolver;
+import org.thymeleaf.extras.springsecurity4.dialect.SpringSecurityDialect;
+
 
 @Configuration
 public class WebMvcConfig extends WebMvcConfigurerAdapter implements ApplicationContextAware {
     @Value("${spring.thymeleaf.cache}")
-    private boolean thymeleafCacheEnable = false;
+    private boolean thymeleafCacheEnable = true;
 
     private ApplicationContext applicationContext;
 
@@ -58,6 +60,10 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter implements Application
         templateEngine.setTemplateResolver(templateResolver());
         // 支持Spring EL表达式
         templateEngine.setEnableSpringELCompiler(true);
+
+        // 支持SpringSecurity方言
+        SpringSecurityDialect securityDialect = new SpringSecurityDialect();
+        templateEngine.addDialect(securityDialect);
 
         return templateEngine;
     }
