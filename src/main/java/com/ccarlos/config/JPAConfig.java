@@ -26,7 +26,7 @@ public class JPAConfig {
     }
 
     @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactoryBean() {
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         HibernateJpaVendorAdapter japVendor = new HibernateJpaVendorAdapter();
         japVendor.setGenerateDdl(false);
 
