@@ -1,6 +1,7 @@
 package com.ccarlos.config;
 
 import com.ccarlos.security.AuthProvider;
+import com.ccarlos.security.LoginAuthFailHandler;
 import com.ccarlos.security.LoginUrlEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -35,6 +36,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .formLogin()
                 .loginProcessingUrl("/login") // 配置角色登录处理入口
+                .failureHandler(authFailHandler()) // 登录验证失败处理器
                 .and()
                 .logout()
                 .logoutUrl("/logout")
@@ -72,9 +74,26 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new AuthProvider();
     }
 
+    /**
+     * @description: 根据不同角色未登录时，跳转到不同登录页面处理器
+     * @author: ccarlos
+     * @date: 2020/4/4 19:29
+     * @return: com.ccarlos.security.AuthProvider
+     */
     @Bean
     public LoginUrlEntryPoint urlEntryPoint() {
         return new LoginUrlEntryPoint("/user/login");
+    }
+
+    /**
+     * @description: 登录失败处理器
+     * @author: ccarlos
+     * @date: 2020/4/4 19:29
+     * @return: com.ccarlos.security.AuthProvider
+     */
+    @Bean
+    public LoginAuthFailHandler authFailHandler() {
+        return new LoginAuthFailHandler(urlEntryPoint());
     }
 
 }
