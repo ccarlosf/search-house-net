@@ -1,4 +1,4 @@
-package com.ccarlos.controller;
+package com.ccarlos.web.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
