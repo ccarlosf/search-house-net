@@ -43,5 +43,14 @@ public class AdminController {
     public String adminLoginPage() {
         return "admin/login";
     }
+
+    /**
+     * 新增房源功能页
+     * @return
+     */
+    @GetMapping("admin/add/house")
+    public String addHousePage() {
+        return "admin/house-add";
+    }
 }
 
