@@ -1,5 +1,6 @@
 package com.ccarlos.config;
 
+import com.google.gson.Gson;
 import com.qiniu.common.Zone;
 import com.qiniu.storage.BucketManager;
 import com.qiniu.storage.UploadManager;
@@ -98,5 +99,8 @@ public class WebFileUploadConfig {
         return new BucketManager(auth(), qiniuConfig());
     }
 
-
+    @Bean
+    public Gson gson() {
+        return new Gson();
+    }
 }
