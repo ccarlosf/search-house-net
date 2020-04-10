@@ -1,7 +1,9 @@
 package com.ccarlos.service.house;
 
+import com.ccarlos.service.ServiceMultiResult;
 import com.ccarlos.service.ServiceResult;
 import com.ccarlos.web.dto.HouseDTO;
+import com.ccarlos.web.form.DatatableSearch;
 import com.ccarlos.web.form.HouseForm;
 
 /**
@@ -16,4 +18,5 @@ public interface IHouseService {
      */
     ServiceResult<HouseDTO> save(HouseForm houseForm);
 
+    ServiceMultiResult<HouseDTO> adminQuery(DatatableSearch searchBody);
 }

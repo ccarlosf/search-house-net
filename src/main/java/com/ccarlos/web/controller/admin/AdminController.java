@@ -1,7 +1,9 @@
 package com.ccarlos.web.controller.admin;
 
+import com.ccarlos.base.ApiDataTableResponse;
 import com.ccarlos.base.ApiResponse;
 import com.ccarlos.entity.SupportAddress;
+import com.ccarlos.service.ServiceMultiResult;
 import com.ccarlos.service.ServiceResult;
 import com.ccarlos.service.house.IAddressService;
 import com.ccarlos.service.house.IHouseService;
@@ -9,6 +11,7 @@ import com.ccarlos.service.house.IQiNiuService;
 import com.ccarlos.web.dto.HouseDTO;
 import com.ccarlos.web.dto.QiNiuPutRet;
 import com.ccarlos.web.dto.SupportAddressDTO;
+import com.ccarlos.web.form.DatatableSearch;
 import com.ccarlos.web.form.HouseForm;
 import com.google.gson.Gson;
 import com.qiniu.common.QiniuException;
@@ -180,6 +183,29 @@ public class AdminController {
         }
 
         return ApiResponse.ofSuccess(ApiResponse.Status.NOT_VALID_PARAM);
+    }
+
+    /**
+     * 房源列表页
+     * @return
+     */
+    @GetMapping("admin/house/list")
+    public String houseListPage() {
+        return "admin/house-list";
+    }
+
+    @PostMapping("admin/houses")
+    @ResponseBody
+    public ApiDataTableResponse houses(@ModelAttribute DatatableSearch searchBody) {
+        ServiceMultiResult<HouseDTO> result = houseService.adminQuery(searchBody);
+
+        ApiDataTableResponse response = new ApiDataTableResponse(ApiResponse.Status.SUCCESS);
+        response.setData(result.getResult());
+        response.setRecordsFiltered(result.getTotal());
+        response.setRecordsTotal(result.getTotal());
+
+        response.setDraw(searchBody.getDraw());
+        return response;
     }
 }
 

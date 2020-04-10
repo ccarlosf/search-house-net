@@ -3,10 +3,12 @@ package com.ccarlos.service.house;
 import com.ccarlos.base.LoginUserUtil;
 import com.ccarlos.entity.*;
 import com.ccarlos.repository.*;
+import com.ccarlos.service.ServiceMultiResult;
 import com.ccarlos.service.ServiceResult;
 import com.ccarlos.web.dto.HouseDTO;
 import com.ccarlos.web.dto.HouseDetailDTO;
 import com.ccarlos.web.dto.HousePictureDTO;
+import com.ccarlos.web.form.DatatableSearch;
 import com.ccarlos.web.form.HouseForm;
 import com.ccarlos.web.form.PhotoForm;
 import org.modelmapper.ModelMapper;
@@ -150,6 +152,21 @@ public class HouseServiceImpl implements IHouseService {
             pictures.add(picture);
         }
         return pictures;
+    }
+
+    @Override
+    public ServiceMultiResult<HouseDTO> adminQuery(DatatableSearch searchBody) {
+
+        List<HouseDTO> houseDTOS = new ArrayList<>();
+
+        Iterable<House> houses = houseRepository.findAll();
+        houses.forEach(house -> {
+            HouseDTO houseDTO = modelMapper.map(house, HouseDTO.class);
+            houseDTO.setCover(this.cdnPrefix + house.getCover());
+            houseDTOS.add(houseDTO);
+        });
+
+        return new ServiceMultiResult<>(houseDTOS.size(),houseDTOS);
     }
 
 }
