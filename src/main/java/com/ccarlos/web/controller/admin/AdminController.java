@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -88,7 +89,7 @@ public class AdminController {
      * @param file
      * @return
      */
-  /*  @PostMapping(value = "admin/upload/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "admin/upload/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public ApiResponse uploadPhoto(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
@@ -107,14 +108,14 @@ public class AdminController {
             return ApiResponse.ofStatus(ApiResponse.Status.INTERNAL_SERVER_ERROR);
         }
         return ApiResponse.ofSuccess(null);
-    }*/
+    }
 
     /**
      * 上传图片接口(七牛云)
      * @param file
      * @return
      */
-    @PostMapping(value = "admin/upload/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /*@PostMapping(value = "admin/upload/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public ApiResponse uploadPhoto(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
@@ -145,7 +146,7 @@ public class AdminController {
             return ApiResponse.ofStatus(ApiResponse.Status.INTERNAL_SERVER_ERROR);
         }
     }
-
+*/
     /**
      * 新增房源接口
      *
