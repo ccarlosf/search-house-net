@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AddressServiceImpl implements IAddressService {
@@ -81,6 +83,23 @@ public class AddressServiceImpl implements IAddressService {
         }
 
         stations.forEach(station -> result.add(modelMapper.map(station, SubwayStationDTO.class)));
+        return result;
+    }
+
+    @Override
+    public Map<SupportAddress.Level, SupportAddressDTO> findCityAndRegion(String cityEnName, String regionEnName) {
+        Map<SupportAddress.Level, SupportAddressDTO> result = new HashMap<>();
+
+        // 查询城市信息
+        SupportAddress city = supportAddressRepository.findByEnNameAndLevel(cityEnName, SupportAddress.Level.CITY
+                .getValue());
+
+        // 查询区域信息
+        SupportAddress region = supportAddressRepository.findByEnNameAndBelongTo(regionEnName, city.getEnName());
+
+        result.put(SupportAddress.Level.CITY, modelMapper.map(city, SupportAddressDTO.class));
+        result.put(SupportAddress.Level.REGION, modelMapper.map(region, SupportAddressDTO.class));
+
         return result;
     }
 }

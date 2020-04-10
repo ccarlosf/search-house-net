@@ -1,29 +1,42 @@
 package com.ccarlos.web.controller.admin;
 
 import com.ccarlos.base.ApiResponse;
+import com.ccarlos.entity.SupportAddress;
+import com.ccarlos.service.ServiceResult;
+import com.ccarlos.service.house.IAddressService;
+import com.ccarlos.service.house.IHouseService;
 import com.ccarlos.service.house.IQiNiuService;
+import com.ccarlos.web.dto.HouseDTO;
 import com.ccarlos.web.dto.QiNiuPutRet;
+import com.ccarlos.web.dto.SupportAddressDTO;
+import com.ccarlos.web.form.HouseForm;
 import com.google.gson.Gson;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 @Controller
 public class AdminController {
 
     @Autowired
     private IQiNiuService qiNiuService;
+
+    @Autowired
+    private IHouseService houseService;
+
+    @Autowired
+    private IAddressService addressService;
 
     @Autowired
     private Gson gson;
@@ -131,6 +144,41 @@ public class AdminController {
         } catch (IOException e) {
             return ApiResponse.ofStatus(ApiResponse.Status.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * 新增房源接口
+     *
+     * @param houseForm
+     * @param bindingResult
+     * @return
+     */
+    @PostMapping("admin/add/house")
+    @ResponseBody
+    public ApiResponse addHouse(@Valid @ModelAttribute("form-house-add") HouseForm houseForm,
+                                BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(),
+                    bindingResult.getAllErrors().get(0).getDefaultMessage(), null);
+        }
+
+        if (houseForm.getPhotos() == null || houseForm.getCover() == null) {
+            return ApiResponse.ofMessage(HttpStatus.BAD_REQUEST.value(), "必须上传图片");
+        }
+
+        // 根据城市名和区域名查询地址信息
+        Map<SupportAddress.Level, SupportAddressDTO> addressMap = addressService.findCityAndRegion
+                (houseForm.getCityEnName(), houseForm.getRegionEnName());
+        if (addressMap.keySet().size() != 2) {
+            return ApiResponse.ofStatus(ApiResponse.Status.NOT_VALID_PARAM);
+        }
+
+        ServiceResult<HouseDTO> result = houseService.save(houseForm);
+        if (result.isSuccess()) {
+            return ApiResponse.ofSuccess(result.getResult());
+        }
+
+        return ApiResponse.ofSuccess(ApiResponse.Status.NOT_VALID_PARAM);
     }
 }
 
