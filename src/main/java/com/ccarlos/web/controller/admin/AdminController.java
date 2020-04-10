@@ -2,6 +2,8 @@ package com.ccarlos.web.controller.admin;
 
 import com.ccarlos.base.ApiDataTableResponse;
 import com.ccarlos.base.ApiResponse;
+import com.ccarlos.base.HouseOperation;
+import com.ccarlos.base.HouseStatus;
 import com.ccarlos.entity.SupportAddress;
 import com.ccarlos.service.ServiceMultiResult;
 import com.ccarlos.service.ServiceResult;
@@ -356,6 +358,45 @@ public class AdminController {
         } else {
             return ApiResponse.ofMessage(HttpStatus.BAD_REQUEST.value(), result.getMessage());
         }
+    }
+
+    /**
+     * 审核接口
+     * @param id
+     * @param operation
+     * @return
+     */
+    @PutMapping("admin/house/operate/{id}/{operation}")
+    @ResponseBody
+    public ApiResponse operateHouse(@PathVariable(value = "id") Long id,
+                                    @PathVariable(value = "operation") int operation) {
+        if (id <= 0) {
+            return ApiResponse.ofStatus(ApiResponse.Status.NOT_VALID_PARAM);
+        }
+        ServiceResult result;
+
+        switch (operation) {
+            case HouseOperation.PASS:
+                result = this.houseService.updateStatus(id, HouseStatus.PASSES.getValue());
+                break;
+            case HouseOperation.PULL_OUT:
+                result = this.houseService.updateStatus(id, HouseStatus.NOT_AUDITED.getValue());
+                break;
+            case HouseOperation.DELETE:
+                result = this.houseService.updateStatus(id, HouseStatus.DELETED.getValue());
+                break;
+            case HouseOperation.RENT:
+                result = this.houseService.updateStatus(id, HouseStatus.RENTED.getValue());
+                break;
+            default:
+                return ApiResponse.ofStatus(ApiResponse.Status.BAD_REQUEST);
+        }
+
+        if (result.isSuccess()) {
+            return ApiResponse.ofSuccess(null);
+        }
+        return ApiResponse.ofMessage(HttpStatus.BAD_REQUEST.value(),
+                result.getMessage());
     }
 }
 
