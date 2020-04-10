@@ -2,6 +2,7 @@ package com.ccarlos.service.house;
 
 import com.ccarlos.entity.SupportAddress;
 import com.ccarlos.service.ServiceMultiResult;
+import com.ccarlos.service.ServiceResult;
 import com.ccarlos.web.dto.SubwayDTO;
 import com.ccarlos.web.dto.SubwayStationDTO;
 import com.ccarlos.web.dto.SupportAddressDTO;
@@ -53,5 +54,18 @@ public interface IAddressService {
      */
     Map<SupportAddress.Level, SupportAddressDTO> findCityAndRegion(String cityEnName, String regionEnName);
 
+    /**
+     * 获取地铁线信息
+     * @param subwayId
+     * @return
+     */
+    ServiceResult<SubwayDTO> findSubway(Long subwayId);
+
+    /**
+     * 获取地铁站点信息
+     * @param stationId
+     * @return
+     */
+    ServiceResult<SubwayStationDTO> findSubwayStation(Long stationId);
 }
 

@@ -7,6 +7,7 @@ import com.ccarlos.repository.SubwayRepository;
 import com.ccarlos.repository.SubwayStationRepository;
 import com.ccarlos.repository.SupportAddressRepository;
 import com.ccarlos.service.ServiceMultiResult;
+import com.ccarlos.service.ServiceResult;
 import com.ccarlos.web.dto.SubwayDTO;
 import com.ccarlos.web.dto.SubwayStationDTO;
 import com.ccarlos.web.dto.SupportAddressDTO;
@@ -102,4 +103,29 @@ public class AddressServiceImpl implements IAddressService {
 
         return result;
     }
+
+    @Override
+    public ServiceResult<SubwayDTO> findSubway(Long subwayId) {
+        if (subwayId == null) {
+            return ServiceResult.notFound();
+        }
+        Subway subway = subwayRepository.findOne(subwayId);
+        if (subway == null) {
+            return ServiceResult.notFound();
+        }
+        return ServiceResult.of(modelMapper.map(subway, SubwayDTO.class));
+    }
+
+    @Override
+    public ServiceResult<SubwayStationDTO> findSubwayStation(Long stationId) {
+        if (stationId == null) {
+            return ServiceResult.notFound();
+        }
+        SubwayStation station = subwayStationRepository.findOne(stationId);
+        if (station == null) {
+            return ServiceResult.notFound();
+        }
+        return ServiceResult.of(modelMapper.map(station, SubwayStationDTO.class));
+    }
+
 }
