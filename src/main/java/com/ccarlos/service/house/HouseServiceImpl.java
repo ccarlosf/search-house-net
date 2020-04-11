@@ -1,5 +1,6 @@
 package com.ccarlos.service.house;
 
+import com.ccarlos.base.HouseSort;
 import com.ccarlos.base.HouseStatus;
 import com.ccarlos.base.LoginUserUtil;
 import com.ccarlos.entity.*;
@@ -14,6 +15,7 @@ import com.ccarlos.web.form.HouseForm;
 import com.ccarlos.web.form.PhotoForm;
 import com.ccarlos.web.form.RentSearch;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
 import org.modelmapper.ModelMapper;
@@ -31,6 +33,7 @@ import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class HouseServiceImpl implements IHouseService {
@@ -383,7 +386,9 @@ public class HouseServiceImpl implements IHouseService {
     @Override
     public ServiceMultiResult<HouseDTO> query(RentSearch rentSearch) {
 
-        Sort sort = new Sort(Sort.Direction.DESC, "lastUpdateTime");
+//        Sort sort = new Sort(Sort.Direction.DESC, "lastUpdateTime");
+        Sort sort = HouseSort.generateSort(rentSearch.getOrderBy(),
+                rentSearch.getOrderDirection());
         int page = rentSearch.getStart() / rentSearch.getSize();
 
         Pageable pageable = new PageRequest(page, rentSearch.getSize(), sort);
@@ -396,9 +401,17 @@ public class HouseServiceImpl implements IHouseService {
             predicate = criteriaBuilder.and(predicate,
                     criteriaBuilder.equal(root.get("cityEnName"), rentSearch.getCityEnName()));
 
+            if (HouseSort.DISTANCE_TO_SUBWAY_KEY.equals(rentSearch.getOrderBy())) {
+                predicate = criteriaBuilder.and
+                        (predicate, criteriaBuilder.gt
+                                (root.get(HouseSort.DISTANCE_TO_SUBWAY_KEY), -1));
+            }
+
             return predicate;
         };
 
+        List<Long> houseIds = new ArrayList<>();
+        Map<Long, HouseDTO> idToHouseMap = Maps.newHashMap();
         Page<House> houses = houseRepository.findAll(specification, pageable);
         List<HouseDTO> houseDTOS = Lists.newArrayList();
 
@@ -406,9 +419,35 @@ public class HouseServiceImpl implements IHouseService {
             HouseDTO houseDTO = modelMapper.map(house, HouseDTO.class);
             houseDTO.setCover(this.cdnPrefix + house.getCover());
             houseDTOS.add(houseDTO);
+
+            houseIds.add(house.getId());
+            idToHouseMap.put(house.getId(), houseDTO);
         });
 
+        wrapperHouseList(houseIds, idToHouseMap);
         return new ServiceMultiResult<>(houses.getTotalElements(), houseDTOS);
     }
 
+
+    /**
+     * 渲染详细信息 及 标签
+     *
+     * @param houseIds
+     * @param idToHouseMap
+     */
+    private void wrapperHouseList(List<Long> houseIds, Map<Long, HouseDTO> idToHouseMap) {
+
+        List<HouseDetail> details = houseDetailRepository.findAllByHouseIdIn(houseIds);
+        details.forEach(houseDetail -> {
+            HouseDTO houseDTO = idToHouseMap.get(houseDetail.getHouseId());
+            HouseDetailDTO detailDTO = modelMapper.map(houseDetail, HouseDetailDTO.class);
+            houseDTO.setHouseDetail(detailDTO);
+        });
+
+        List<HouseTag> houseTags = houseTagRepository.findAllByHouseIdIn(houseIds);
+        houseTags.forEach(houseTag -> {
+            HouseDTO house = idToHouseMap.get(houseTag.getHouseId());
+            house.getTags().add(houseTag.getName());
+        });
+    }
 }
