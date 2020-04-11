@@ -1,6 +1,7 @@
 package com.ccarlos.web.controller.house;
 
 import com.ccarlos.base.ApiResponse;
+import com.ccarlos.base.RentValueBlock;
 import com.ccarlos.service.ServiceMultiResult;
 import com.ccarlos.service.ServiceResult;
 import com.ccarlos.service.house.IAddressService;
@@ -113,6 +114,13 @@ public class HouseController {
             session.setAttribute("cityEnName", rentSearch.getCityEnName());
         }
 
+        ServiceResult<SupportAddressDTO> city = addressService.findCity(rentSearch.getCityEnName());
+        if (!city.isSuccess()) {
+            redirectAttributes.addAttribute("msg", "must_chose_city");
+            return "redirect:/index";
+        }
+        model.addAttribute("currentCity", city.getResult());
+
         ServiceMultiResult<SupportAddressDTO> addressResult =
                 addressService.findAllRegionsByCityName(rentSearch.getCityEnName());
         if (addressResult.getResult() == null || addressResult.getTotal() < 1) {
@@ -130,6 +138,14 @@ public class HouseController {
         }
         model.addAttribute("searchBody", rentSearch);
         model.addAttribute("regions", addressResult.getResult());
+
+        model.addAttribute("priceBlocks", RentValueBlock.PRICE_BLOCK);
+        model.addAttribute("areaBlocks", RentValueBlock.AREA_BLOCK);
+
+        model.addAttribute("currentPriceBlock", RentValueBlock.matchPrice
+                (rentSearch.getPriceBlock()));
+        model.addAttribute("currentAreaBlock", RentValueBlock.matchArea
+                (rentSearch.getAreaBlock()));
         return "rent-list";
     }
 

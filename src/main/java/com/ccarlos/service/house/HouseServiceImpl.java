@@ -13,6 +13,7 @@ import com.ccarlos.web.form.DatatableSearch;
 import com.ccarlos.web.form.HouseForm;
 import com.ccarlos.web.form.PhotoForm;
 import com.ccarlos.web.form.RentSearch;
+import com.google.common.collect.Lists;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
 import org.modelmapper.ModelMapper;
@@ -381,7 +382,33 @@ public class HouseServiceImpl implements IHouseService {
 
     @Override
     public ServiceMultiResult<HouseDTO> query(RentSearch rentSearch) {
-        return null;
+
+        Sort sort = new Sort(Sort.Direction.DESC, "lastUpdateTime");
+        int page = rentSearch.getStart() / rentSearch.getSize();
+
+        Pageable pageable = new PageRequest(page, rentSearch.getSize(), sort);
+
+        Specification<House> specification = (root, criteriaQuery, criteriaBuilder) -> {
+
+            Predicate predicate = criteriaBuilder.equal(root.get("status"),
+                    HouseStatus.PASSES.getValue());
+
+            predicate = criteriaBuilder.and(predicate,
+                    criteriaBuilder.equal(root.get("cityEnName"), rentSearch.getCityEnName()));
+
+            return predicate;
+        };
+
+        Page<House> houses = houseRepository.findAll(specification, pageable);
+        List<HouseDTO> houseDTOS = Lists.newArrayList();
+
+        houses.forEach(house -> {
+            HouseDTO houseDTO = modelMapper.map(house, HouseDTO.class);
+            houseDTO.setCover(this.cdnPrefix + house.getCover());
+            houseDTOS.add(houseDTO);
+        });
+
+        return new ServiceMultiResult<>(houses.getTotalElements(), houseDTOS);
     }
 
 }
