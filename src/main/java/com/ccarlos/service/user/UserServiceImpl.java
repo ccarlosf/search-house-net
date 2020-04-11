@@ -5,6 +5,9 @@ import com.ccarlos.entity.User;
 import com.ccarlos.repository.RoleRepository;
 import com.ccarlos.repository.UserRepository;
 import com.ccarlos.service.IUserService;
+import com.ccarlos.service.ServiceResult;
+import com.ccarlos.web.dto.UserDTO;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
@@ -24,6 +27,9 @@ public class UserServiceImpl implements IUserService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private ModelMapper modelMapper;
 
 
     private final Md5PasswordEncoder passwordEncoder = new Md5PasswordEncoder();
@@ -47,4 +53,15 @@ public class UserServiceImpl implements IUserService {
         user.setAuthorityList(authorities);
         return user;
     }
+
+    @Override
+    public ServiceResult<UserDTO> findById(Long userId) {
+        User user = userRepository.findOne(userId);
+        if (user == null) {
+            return ServiceResult.notFound();
+        }
+        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+        return ServiceResult.of(userDTO);
+    }
+
 }

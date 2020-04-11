@@ -1,6 +1,7 @@
 package com.ccarlos.service;
 
 import com.ccarlos.entity.User;
+import com.ccarlos.web.dto.UserDTO;
 
 
 /**
@@ -9,4 +10,6 @@ import com.ccarlos.entity.User;
 public interface IUserService {
 
     User findUserByName(String userName);
+
+    ServiceResult<UserDTO> findById(Long userId);
 }
