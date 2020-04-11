@@ -5,6 +5,7 @@ import com.ccarlos.service.ServiceResult;
 import com.ccarlos.web.dto.HouseDTO;
 import com.ccarlos.web.form.DatatableSearch;
 import com.ccarlos.web.form.HouseForm;
+import com.ccarlos.web.form.RentSearch;
 
 /**
  * 房屋管理服务接口
@@ -69,4 +70,10 @@ public interface IHouseService {
      * @return
      */
     ServiceResult updateStatus(Long id, int status);
-}
+
+    /**
+     * 查询房源信息集
+     * @param rentSearch
+     * @return
+     */
+    ServiceMultiResult<HouseDTO> query(RentSearch rentSearch);}

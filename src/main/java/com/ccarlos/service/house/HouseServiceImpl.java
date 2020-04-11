@@ -12,6 +12,7 @@ import com.ccarlos.web.dto.HousePictureDTO;
 import com.ccarlos.web.form.DatatableSearch;
 import com.ccarlos.web.form.HouseForm;
 import com.ccarlos.web.form.PhotoForm;
+import com.ccarlos.web.form.RentSearch;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
 import org.modelmapper.ModelMapper;
@@ -376,6 +377,11 @@ public class HouseServiceImpl implements IHouseService {
 
         houseRepository.updateStatus(id, status);
         return ServiceResult.success();
+    }
+
+    @Override
+    public ServiceMultiResult<HouseDTO> query(RentSearch rentSearch) {
+        return null;
     }
 
 }
