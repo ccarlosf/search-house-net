@@ -1,6 +1,7 @@
 package com.ccarlos.service.search;
 
 import com.ccarlos.base.HouseSort;
+import com.ccarlos.base.RentValueBlock;
 import com.ccarlos.entity.House;
 import com.ccarlos.entity.HouseDetail;
 import com.ccarlos.entity.HouseTag;
@@ -20,6 +21,7 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
@@ -273,6 +275,52 @@ public class SearchServiceImpl implements ISearchService {
                             rentSearch.getRegionEnName())
             );
         }
+
+        RentValueBlock area = RentValueBlock.matchArea(rentSearch.getAreaBlock());
+        if (!RentValueBlock.ALL.equals(area)) {
+            RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(HouseIndexKey.AREA);
+            if (area.getMax() > 0) {
+                rangeQueryBuilder.lte(area.getMax());
+            }
+            if (area.getMin() > 0) {
+                rangeQueryBuilder.gte(area.getMin());
+            }
+            boolQuery.filter(rangeQueryBuilder);
+        }
+
+        RentValueBlock price = RentValueBlock.matchPrice(rentSearch.getPriceBlock());
+        if (!RentValueBlock.ALL.equals(price)) {
+            RangeQueryBuilder rangeQuery = QueryBuilders.rangeQuery(HouseIndexKey.PRICE);
+            if (price.getMax() > 0) {
+                rangeQuery.lte(price.getMax());
+            }
+            if (price.getMin() > 0) {
+                rangeQuery.gte(price.getMin());
+            }
+            boolQuery.filter(rangeQuery);
+        }
+
+        if (rentSearch.getDirection() > 0) {
+            boolQuery.filter(
+                    QueryBuilders.termQuery(HouseIndexKey.DIRECTION, rentSearch.getDirection())
+            );
+        }
+
+        if (rentSearch.getRentWay() > -1) {
+            boolQuery.filter(
+                    QueryBuilders.termQuery(HouseIndexKey.RENT_WAY, rentSearch.getRentWay())
+            );
+        }
+
+        boolQuery.must(
+                QueryBuilders.multiMatchQuery(rentSearch.getKeywords(),
+                        HouseIndexKey.TITLE,
+                        HouseIndexKey.TRAFFIC,
+                        HouseIndexKey.DISTRICT,
+                        HouseIndexKey.ROUND_SERVICE,
+                        HouseIndexKey.SUBWAY_LINE_NAME,
+                        HouseIndexKey.SUBWAY_STATION_NAME
+                ));
 
         SearchRequestBuilder requestBuilder = this.esClient.prepareSearch(INDEX_NAME)
                 .setTypes(INDEX_TYPE)
