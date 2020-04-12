@@ -7,6 +7,7 @@ import com.ccarlos.entity.*;
 import com.ccarlos.repository.*;
 import com.ccarlos.service.ServiceMultiResult;
 import com.ccarlos.service.ServiceResult;
+import com.ccarlos.service.search.ISearchService;
 import com.ccarlos.web.dto.HouseDTO;
 import com.ccarlos.web.dto.HouseDetailDTO;
 import com.ccarlos.web.dto.HousePictureDTO;
@@ -61,6 +62,9 @@ public class HouseServiceImpl implements IHouseService {
 
     @Autowired
     private IQiNiuService qiNiuService;
+
+    @Autowired
+    private ISearchService searchService;
 
     @Value("${qiniu.cdn.prefix}")
     private String cdnPrefix;
@@ -289,6 +293,10 @@ public class HouseServiceImpl implements IHouseService {
         house.setLastUpdateTime(new Date());
         houseRepository.save(house);
 
+        if (house.getStatus() == HouseStatus.PASSES.getValue()) {
+            searchService.index(house.getId());
+        }
+
         return ServiceResult.success();
     }
 
@@ -380,6 +388,14 @@ public class HouseServiceImpl implements IHouseService {
         }
 
         houseRepository.updateStatus(id, status);
+
+        // 上架更新索引 其他情况都要删除索引
+        if (status == HouseStatus.PASSES.getValue()) {
+            searchService.index(id);
+        } else {
+            searchService.remove(id);
+        }
+
         return ServiceResult.success();
     }
 
