@@ -1,24 +1,31 @@
 package com.ccarlos.service.search;
 
+import com.ccarlos.base.HouseSort;
 import com.ccarlos.entity.House;
 import com.ccarlos.entity.HouseDetail;
 import com.ccarlos.entity.HouseTag;
 import com.ccarlos.repository.HouseDetailRepository;
 import com.ccarlos.repository.HouseRepository;
 import com.ccarlos.repository.HouseTagRepository;
+import com.ccarlos.service.ServiceMultiResult;
+import com.ccarlos.web.form.RentSearch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.primitives.Longs;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.sort.SortOrder;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -248,5 +255,50 @@ public class SearchServiceImpl implements ISearchService {
         } catch (JsonProcessingException e) {
             logger.error("Cannot encode json for " + message, e);
         }
+    }
+
+    @Override
+    public ServiceMultiResult<Long> query(RentSearch rentSearch) {
+
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+
+        boolQuery.filter(
+                QueryBuilders.termQuery(HouseIndexKey.CITY_EN_NAME, rentSearch.getCityEnName())
+        );
+
+        if (rentSearch.getRegionEnName() != null
+                && !"*".equals(rentSearch.getRegionEnName())) {
+            boolQuery.filter(
+                    QueryBuilders.termQuery(HouseIndexKey.REGION_EN_NAME,
+                            rentSearch.getRegionEnName())
+            );
+        }
+
+        SearchRequestBuilder requestBuilder = this.esClient.prepareSearch(INDEX_NAME)
+                .setTypes(INDEX_TYPE)
+                .setQuery(boolQuery)
+                .addSort(
+                        HouseSort.getSortKey(rentSearch.getOrderBy()),
+                        SortOrder.fromString(rentSearch.getOrderDirection())
+                )
+                .setFrom(rentSearch.getStart())
+                .setSize(rentSearch.getSize());
+
+        logger.debug(requestBuilder.toString());
+
+        List<Long> houseIds = new ArrayList<>();
+        SearchResponse response = requestBuilder.get();
+        if (response.status() != RestStatus.OK) {
+            logger.warn("Search status is no ok for " + requestBuilder);
+            return new ServiceMultiResult<>(0, houseIds);
+        }
+
+        for (SearchHit hit : response.getHits()) {
+            System.out.println(hit.getSource());
+            houseIds.add(Longs.tryParse
+                    (String.valueOf(hit.getSource().get(HouseIndexKey.HOUSE_ID))));
+        }
+
+        return new ServiceMultiResult<>(response.getHits().totalHits, houseIds);
     }
 }
