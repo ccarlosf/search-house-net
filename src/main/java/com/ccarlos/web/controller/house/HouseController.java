@@ -8,6 +8,7 @@ import com.ccarlos.service.ServiceMultiResult;
 import com.ccarlos.service.ServiceResult;
 import com.ccarlos.service.house.IAddressService;
 import com.ccarlos.service.house.IHouseService;
+import com.ccarlos.service.search.ISearchService;
 import com.ccarlos.web.dto.*;
 import com.ccarlos.web.form.RentSearch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,24 @@ public class HouseController {
 
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private ISearchService searchService;
+
+
+    /**
+     * 自动补全接口
+     */
+    @GetMapping("rent/house/autocomplete")
+    @ResponseBody
+    public ApiResponse autocomplete(@RequestParam(value = "prefix") String prefix) {
+
+        if (prefix.isEmpty()) {
+            return ApiResponse.ofStatus(ApiResponse.Status.BAD_REQUEST);
+        }
+        ServiceResult<List<String>> result = this.searchService.suggest(prefix);
+        return ApiResponse.ofSuccess(result.getResult());
+    }
 
     /**
      * 获取支持城市列表

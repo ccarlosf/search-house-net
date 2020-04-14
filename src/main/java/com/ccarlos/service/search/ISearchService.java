@@ -1,6 +1,7 @@
 package com.ccarlos.service.search;
 
 import com.ccarlos.service.ServiceMultiResult;
+import com.ccarlos.service.ServiceResult;
 import com.ccarlos.web.form.RentSearch;
 
 import java.util.List;
@@ -29,4 +30,9 @@ public interface ISearchService {
      * @return
      */
     ServiceMultiResult<Long> query(RentSearch rentSearch);
+
+    /**
+     * 获取补全建议关键词
+     */
+    ServiceResult<List<String>> suggest(String prefix);
 }
