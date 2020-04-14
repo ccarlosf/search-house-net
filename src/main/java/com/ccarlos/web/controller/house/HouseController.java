@@ -194,7 +194,9 @@ public class HouseController {
         model.addAttribute("agent", userDTOServiceResult.getResult());
         model.addAttribute("house", houseDTO);
 
-        model.addAttribute("houseCountInDistrict", 0);
+        ServiceResult<Long> aggResult = searchService.aggregateDistrictHouse
+                (city.getEnName(), region.getEnName(), houseDTO.getDistrict());
+        model.addAttribute("houseCountInDistrict", aggResult.getResult());
 
         return "house-detail";
     }
