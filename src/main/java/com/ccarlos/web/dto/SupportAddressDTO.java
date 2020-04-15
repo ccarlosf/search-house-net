@@ -2,6 +2,8 @@ package com.ccarlos.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javax.persistence.Column;
+
 
 public class SupportAddressDTO {
 
@@ -17,6 +19,10 @@ public class SupportAddressDTO {
     private String cnName;
 
     private String level;
+
+    private double baiduMapLongitude;
+
+    private double baiduMapLatitude;
 
     public Long getId() {
         return id;
@@ -56,5 +62,21 @@ public class SupportAddressDTO {
 
     public void setLevel(String level) {
         this.level = level;
+    }
+
+    public double getBaiduMapLongitude() {
+        return baiduMapLongitude;
+    }
+
+    public void setBaiduMapLongitude(double baiduMapLongitude) {
+        this.baiduMapLongitude = baiduMapLongitude;
+    }
+
+    public double getBaiduMapLatitude() {
+        return baiduMapLatitude;
+    }
+
+    public void setBaiduMapLatitude(double baiduMapLatitude) {
+        this.baiduMapLatitude = baiduMapLatitude;
     }
 }
