@@ -332,6 +332,12 @@ public class SearchServiceImpl implements ISearchService {
             );
         }
 
+//        boolQuery.must(
+//                QueryBuilders.matchQuery(HouseIndexKey.TITLE, rentSearch.getKeywords())
+//                        .boost(2.0f)
+//        );
+
+//        boolQuery.should;
         boolQuery.must(
                 QueryBuilders.multiMatchQuery(rentSearch.getKeywords(),
                         HouseIndexKey.TITLE,
@@ -350,7 +356,9 @@ public class SearchServiceImpl implements ISearchService {
                         SortOrder.fromString(rentSearch.getOrderDirection())
                 )
                 .setFrom(rentSearch.getStart())
-                .setSize(rentSearch.getSize());
+                .setSize(rentSearch.getSize())
+                .setFetchSource(HouseIndexKey.HOUSE_ID, null);
+
 
         logger.debug(requestBuilder.toString());
 
