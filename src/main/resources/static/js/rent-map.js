@@ -25,6 +25,17 @@ function load(city, regions, aggData) {
     }
 
     drawRegion(map, regions);
+
+  /*  loadHouseData();
+
+    // 缩放事件
+    map.addEventListener('zoomend', function (event) {
+        mapResize(event.target);
+    });
+    // 地图拖拽完成事件
+    map.addEventListener('dragend', function (event) {
+        mapResize(event.target);
+    });*/
 }
 
 /**
@@ -76,7 +87,7 @@ function drawRegion(map, regionList) {
         // 记录行政区域覆盖物
         polygonContext[textContent] = []; // 点集合
         (function (textContent) { // 闭包传参
-            boundary.get(city.cn_name + regionList[i].cn_name, function (rs) { // 获取行政区域
+            boundary.get(city.cn_name + regionList[i].cn_name, function(rs) { // 获取行政区域
                 var count = rs.boundaries.length; // 行政区域边界点集合长度
                 if (count === 0) {
                     alert('未能获取当前输入行政区域')
@@ -89,7 +100,7 @@ function drawRegion(map, regionList) {
                         rs.boundaries[j],
                         {
                             strokeWeight: 2,
-                            strokeColor: '#0054a5',
+                            strokeColor:'#0054a5',
                             fillOpacity: 0.3,
                             fillColor: '#0054a5'
                         }
@@ -100,6 +111,36 @@ function drawRegion(map, regionList) {
                 }
             })
         })(textContent);
-    }
-}
 
+        textLabel.addEventListener('mouseover', function (event) {
+            var label = event.target;
+            var boundaries = polygonContext[label.getContent()];
+
+            label.setStyle({backgroundColor: '#1AA591'});
+            for (var n = 0; n < boundaries.length; n++) {
+                boundaries[n].show();
+            }
+        });
+
+        textLabel.addEventListener('mouseout', function (event) {
+            var label = event.target;
+            var boundaries = polygonContext[label.getContent()];
+
+            label.setStyle({backgroundColor: '#0054a5'});
+            for (var n = 0; n < boundaries.length; n++) {
+                boundaries[n].hide();
+            }
+        });
+
+        textLabel.addEventListener('click', function (event) {
+            var label = event.target;
+            var map = label.getMap();
+            map.zoomIn();
+            map.panTo(event.point);
+        });
+    }
+
+
+
+
+}
