@@ -5,11 +5,14 @@ import com.ccarlos.base.RentValueBlock;
 import com.ccarlos.entity.House;
 import com.ccarlos.entity.HouseDetail;
 import com.ccarlos.entity.HouseTag;
+import com.ccarlos.entity.SupportAddress;
 import com.ccarlos.repository.HouseDetailRepository;
 import com.ccarlos.repository.HouseRepository;
 import com.ccarlos.repository.HouseTagRepository;
+import com.ccarlos.repository.SupportAddressRepository;
 import com.ccarlos.service.ServiceMultiResult;
 import com.ccarlos.service.ServiceResult;
+import com.ccarlos.service.house.IAddressService;
 import com.ccarlos.web.form.RentSearch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -76,6 +79,12 @@ public class SearchServiceImpl implements ISearchService {
     private HouseTagRepository tagRepository;
 
     @Autowired
+    private SupportAddressRepository supportAddressRepository;
+
+    @Autowired
+    private IAddressService addressService;
+
+    @Autowired
     private ModelMapper modelMapper;
 
     @Autowired
@@ -125,6 +134,23 @@ public class SearchServiceImpl implements ISearchService {
             // TODO 异常情况
         }
         modelMapper.map(detail, indexTemplate);
+
+        SupportAddress city = supportAddressRepository.findByEnNameAndLevel
+                (house.getCityEnName(), SupportAddress.Level.CITY.getValue());
+
+        SupportAddress region = supportAddressRepository.findByEnNameAndLevel
+                (house.getRegionEnName(), SupportAddress.Level.REGION.getValue());
+
+        String address = city.getCnName() + region.getCnName() + house.getStreet() +
+                house.getDistrict() + detail.getDetailAddress();
+        ServiceResult<BaiduMapLocation> location = addressService.getBaiduMapLocation
+                (city.getCnName(), address);
+        if (!location.isSuccess()) {
+            this.index(message.getHouseId(), message.getRetry() + 1);
+            return;
+        }
+        indexTemplate.setLocation(location.getResult());
+
 
         List<HouseTag> tags = tagRepository.findAllByHouseId(houseId);
         if (tags != null && !tags.isEmpty()) {

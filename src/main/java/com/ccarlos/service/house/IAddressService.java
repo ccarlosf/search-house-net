@@ -3,6 +3,7 @@ package com.ccarlos.service.house;
 import com.ccarlos.entity.SupportAddress;
 import com.ccarlos.service.ServiceMultiResult;
 import com.ccarlos.service.ServiceResult;
+import com.ccarlos.service.search.BaiduMapLocation;
 import com.ccarlos.web.dto.SubwayDTO;
 import com.ccarlos.web.dto.SubwayStationDTO;
 import com.ccarlos.web.dto.SupportAddressDTO;
@@ -74,5 +75,11 @@ public interface IAddressService {
      * @return
      */
     ServiceResult<SupportAddressDTO> findCity(String cityEnName);
+
+    /**
+     * 根据城市以及具体地位获取百度地图的经纬度
+     */
+    ServiceResult<BaiduMapLocation> getBaiduMapLocation(String city, String address);
+
 }
 
