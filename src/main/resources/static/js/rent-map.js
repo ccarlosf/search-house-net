@@ -1,6 +1,3 @@
-/**
- * Created by 瓦力.
- */
 var regionCountMap = {}, // 地区数据
     labels = [], // 标签列表
     params = {
@@ -29,13 +26,13 @@ function load(city, regions, aggData) {
     loadHouseData();
 
     // 缩放事件
-   /* map.addEventListener('zoomend', function (event) {
+    map.addEventListener('zoomend', function (event) {
         mapResize(event.target);
     });
     // 地图拖拽完成事件
     map.addEventListener('dragend', function (event) {
         mapResize(event.target);
-    });*/
+    });
 }
 
 /**
@@ -226,3 +223,30 @@ $('ol.order-select li').on('click', function () {
     params.orderDirection = $(this).attr('data-direction');
     loadHouseData();
 });
+
+function mapResize(_map) {
+    var bounds = _map.getBounds(),
+        southWest = bounds.getSouthWest(), // 西南角
+        northEast = bounds.getNorthEast(); // 东北角
+
+    var zoomLevel = _map.getZoom();
+
+    params = {
+        level: zoomLevel,
+        leftLongitude: southWest.lng, // 左上角
+        leftLatitude: northEast.lat,
+        rightLongitude: northEast.lng, // 右下角
+        rightLatitude: southWest.lat
+    };
+
+    if (zoomLevel < 13) {
+        for (var i = 0; i < labels.length; i++) {
+            labels[i].show();
+        }
+    } else {
+        loadHouseData();
+        for (var i = 0; i < labels.length; i++) {
+            labels[i].hide();
+        }
+    }
+}

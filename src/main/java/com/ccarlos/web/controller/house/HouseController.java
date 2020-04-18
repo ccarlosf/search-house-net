@@ -238,12 +238,12 @@ public class HouseController {
             return ApiResponse.ofMessage(HttpStatus.BAD_REQUEST.value(),
                     "必须选择城市");
         }
-        ServiceMultiResult<HouseDTO> serviceMultiResult=null;
+        ServiceMultiResult<HouseDTO> serviceMultiResult;
         if (mapSearch.getLevel() < 13) {
             serviceMultiResult = houseService.wholeMapQuery(mapSearch);
         } else {
             // 小地图查询必须要传递地图边界参数
-//            serviceMultiResult = houseService.boundMapQuery(mapSearch);
+            serviceMultiResult = houseService.boundMapQuery(mapSearch);
         }
 
         ApiResponse response = ApiResponse.ofSuccess(serviceMultiResult.getResult());

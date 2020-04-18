@@ -2,6 +2,7 @@ package com.ccarlos.service.search;
 
 import com.ccarlos.service.ServiceMultiResult;
 import com.ccarlos.service.ServiceResult;
+import com.ccarlos.web.form.MapSearch;
 import com.ccarlos.web.form.RentSearch;
 
 import java.util.List;
@@ -53,8 +54,17 @@ public interface ISearchService {
 
     /**
      * 城市级别查询
+     *
      * @return
      */
     ServiceMultiResult<Long> mapQuery(String cityEnName, String orderBy,
                                       String orderDirection, int start, int size);
+
+    /**
+     * 精确范围数据查询
+     *
+     * @param mapSearch
+     * @return
+     */
+    ServiceMultiResult<Long> mapQuery(MapSearch mapSearch);
 }

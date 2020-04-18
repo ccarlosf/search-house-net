@@ -93,4 +93,12 @@ public interface IHouseService {
      */
     ServiceMultiResult<HouseDTO> wholeMapQuery(MapSearch mapSearch);
 
+    /**
+     * 精确范围数据查询
+     *
+     * @param mapSearch
+     * @return
+     */
+    ServiceMultiResult<HouseDTO> boundMapQuery(MapSearch mapSearch);
+
 }

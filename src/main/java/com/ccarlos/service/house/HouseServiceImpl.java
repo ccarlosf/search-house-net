@@ -505,4 +505,15 @@ public class HouseServiceImpl implements IHouseService {
         List<HouseDTO> houses = wrapperHouseResult(serviceResult.getResult());
         return new ServiceMultiResult<>(serviceResult.getTotal(), houses);
     }
+
+    @Override
+    public ServiceMultiResult<HouseDTO> boundMapQuery(MapSearch mapSearch) {
+        ServiceMultiResult<Long> serviceResult = searchService.mapQuery(mapSearch);
+        if (serviceResult.getTotal() == 0) {
+            return new ServiceMultiResult<>(0, new ArrayList<>());
+        }
+
+        List<HouseDTO> houses = wrapperHouseResult(serviceResult.getResult());
+        return new ServiceMultiResult<>(serviceResult.getTotal(), houses);
+    }
 }
