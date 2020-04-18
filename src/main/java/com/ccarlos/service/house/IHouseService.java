@@ -5,6 +5,7 @@ import com.ccarlos.service.ServiceResult;
 import com.ccarlos.web.dto.HouseDTO;
 import com.ccarlos.web.form.DatatableSearch;
 import com.ccarlos.web.form.HouseForm;
+import com.ccarlos.web.form.MapSearch;
 import com.ccarlos.web.form.RentSearch;
 
 /**
@@ -14,6 +15,7 @@ public interface IHouseService {
 
     /**
      * 新增
+     *
      * @param houseForm
      * @return
      */
@@ -23,6 +25,7 @@ public interface IHouseService {
 
     /**
      * 查询完整房源信息
+     *
      * @param id
      * @return
      */
@@ -32,6 +35,7 @@ public interface IHouseService {
 
     /**
      * 移除图片
+     *
      * @param id
      * @return
      */
@@ -39,6 +43,7 @@ public interface IHouseService {
 
     /**
      * 更新封面
+     *
      * @param coverId
      * @param targetId
      * @return
@@ -47,6 +52,7 @@ public interface IHouseService {
 
     /**
      * 新增标签
+     *
      * @param houseId
      * @param tag
      * @return
@@ -73,7 +79,18 @@ public interface IHouseService {
 
     /**
      * 查询房源信息集
+     *
      * @param rentSearch
      * @return
      */
-    ServiceMultiResult<HouseDTO> query(RentSearch rentSearch);}
+    ServiceMultiResult<HouseDTO> query(RentSearch rentSearch);
+
+    /**
+     * 全地图查询
+     *
+     * @param mapSearch
+     * @return
+     */
+    ServiceMultiResult<HouseDTO> wholeMapQuery(MapSearch mapSearch);
+
+}

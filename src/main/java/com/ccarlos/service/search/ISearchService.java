@@ -50,4 +50,11 @@ public interface ISearchService {
      * @return
      */
     ServiceMultiResult<HouseBucketDTO> mapAggregate(String cityEnName);
+
+    /**
+     * 城市级别查询
+     * @return
+     */
+    ServiceMultiResult<Long> mapQuery(String cityEnName, String orderBy,
+                                      String orderDirection, int start, int size);
 }

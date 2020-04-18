@@ -11,10 +11,7 @@ import com.ccarlos.service.search.ISearchService;
 import com.ccarlos.web.dto.HouseDTO;
 import com.ccarlos.web.dto.HouseDetailDTO;
 import com.ccarlos.web.dto.HousePictureDTO;
-import com.ccarlos.web.form.DatatableSearch;
-import com.ccarlos.web.form.HouseForm;
-import com.ccarlos.web.form.PhotoForm;
-import com.ccarlos.web.form.RentSearch;
+import com.ccarlos.web.form.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qiniu.common.QiniuException;
@@ -494,5 +491,18 @@ public class HouseServiceImpl implements IHouseService {
             HouseDTO house = idToHouseMap.get(houseTag.getHouseId());
             house.getTags().add(houseTag.getName());
         });
+    }
+
+    @Override
+    public ServiceMultiResult<HouseDTO> wholeMapQuery(MapSearch mapSearch) {
+        ServiceMultiResult<Long> serviceResult =
+                searchService.mapQuery(mapSearch.getCityEnName(), mapSearch.getOrderBy(),
+                        mapSearch.getOrderDirection(), mapSearch.getStart(), mapSearch.getSize());
+
+        if (serviceResult.getTotal() == 0) {
+            return new ServiceMultiResult<>(0, new ArrayList<>());
+        }
+        List<HouseDTO> houses = wrapperHouseResult(serviceResult.getResult());
+        return new ServiceMultiResult<>(serviceResult.getTotal(), houses);
     }
 }

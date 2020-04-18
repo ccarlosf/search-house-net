@@ -552,4 +552,32 @@ public class SearchServiceImpl implements ISearchService {
 
         return new ServiceMultiResult<>(response.getHits().getTotalHits(), buckets);
     }
+
+    @Override
+    public ServiceMultiResult<Long> mapQuery(String cityEnName, String orderBy,
+                                             String orderDirection,
+                                             int start,
+                                             int size) {
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+        boolQuery.filter(QueryBuilders.termQuery(HouseIndexKey.CITY_EN_NAME, cityEnName));
+
+        SearchRequestBuilder searchRequestBuilder = this.esClient.prepareSearch(INDEX_NAME)
+                .setTypes(INDEX_TYPE)
+                .setQuery(boolQuery)
+                .addSort(HouseSort.getSortKey(orderBy), SortOrder.fromString(orderDirection))
+                .setFrom(start)
+                .setSize(size);
+
+        List<Long> houseIds = new ArrayList<>();
+        SearchResponse response = searchRequestBuilder.get();
+        if (response.status() != RestStatus.OK) {
+            logger.warn("Search status is not ok for " + searchRequestBuilder);
+            return new ServiceMultiResult<>(0, houseIds);
+        }
+
+        for (SearchHit hit : response.getHits()) {
+            houseIds.add(Longs.tryParse(String.valueOf(hit.getSource().get(HouseIndexKey.HOUSE_ID))));
+        }
+        return new ServiceMultiResult<>(response.getHits().getTotalHits(), houseIds);
+    }
 }
