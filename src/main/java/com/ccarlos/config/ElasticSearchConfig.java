@@ -36,18 +36,18 @@ public class ElasticSearchConfig {
 //          InetAddress.getByName("10.99.207.76"), 8999
         );
 
-        InetSocketTransportAddress slave1 = new InetSocketTransportAddress(
+       /* InetSocketTransportAddress slave1 = new InetSocketTransportAddress(
                 InetAddress.getByName("192.168.253.139"), 9300
         );
 
         InetSocketTransportAddress slave2 = new InetSocketTransportAddress(
                 InetAddress.getByName("192.168.253.140"), 9300
-        );
+        );*/
 
         TransportClient client = new PreBuiltTransportClient(settings)
-                .addTransportAddress(master)
-                .addTransportAddress(slave1)
-                .addTransportAddress(slave2);
+                .addTransportAddress(master);
+//                .addTransportAddress(slave1)
+//                .addTransportAddress(slave2);
 
         return client;
     }
