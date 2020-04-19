@@ -28,4 +28,13 @@ public interface IUserService {
      * @return
      */
     User addUserByPhone(String telehone);
+
+    /**
+     * 修改指定属性值
+     *
+     * @param profile
+     * @param value
+     * @return
+     */
+    ServiceResult modifyUserProfile(String profile, String value);
 }

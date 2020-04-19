@@ -1,5 +1,6 @@
 package com.ccarlos.service.user;
 
+import com.ccarlos.base.LoginUserUtil;
 import com.ccarlos.entity.Role;
 import com.ccarlos.entity.User;
 import com.ccarlos.repository.RoleRepository;
@@ -105,5 +106,29 @@ public class UserServiceImpl implements IUserService {
         user.setAuthorityList(Lists.newArrayList
                 (new SimpleGrantedAuthority("ROLE_USER")));
         return user;
+    }
+
+    @Override
+    @Transactional
+    public ServiceResult modifyUserProfile(String profile, String value) {
+        Long userId = LoginUserUtil.getLoginUserId();
+        if (profile == null || profile.isEmpty()) {
+            return new ServiceResult(false, "属性不可以为空");
+        }
+        switch (profile) {
+            case "name":
+                userRepository.updateUsername(userId, value);
+                break;
+            case "email":
+                userRepository.updateEmail(userId, value);
+                break;
+            case "password":
+                userRepository.updatePassword
+                        (userId, this.passwordEncoder.encodePassword(value, userId));
+                break;
+            default:
+                return new ServiceResult(false, "不支持的属性");
+        }
+        return ServiceResult.success();
     }
 }
