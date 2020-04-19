@@ -81,5 +81,19 @@ public interface IAddressService {
      */
     ServiceResult<BaiduMapLocation> getBaiduMapLocation(String city, String address);
 
+    /**
+     * 上传百度LBS数据
+     */
+    ServiceResult lbsUpload(BaiduMapLocation location, String title, String address,
+                            long houseId, int price, int area);
+
+    /**
+     * 移除百度LBS数据
+     *
+     * @param houseId
+     * @return
+     */
+    ServiceResult removeLbs(Long houseId);
+
 }
 
