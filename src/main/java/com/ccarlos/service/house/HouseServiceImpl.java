@@ -2,6 +2,7 @@ package com.ccarlos.service.house;
 
 import com.ccarlos.base.HouseSort;
 import com.ccarlos.base.HouseStatus;
+import com.ccarlos.base.HouseSubscribeStatus;
 import com.ccarlos.base.LoginUserUtil;
 import com.ccarlos.entity.*;
 import com.ccarlos.repository.*;
@@ -11,6 +12,7 @@ import com.ccarlos.service.search.ISearchService;
 import com.ccarlos.web.dto.HouseDTO;
 import com.ccarlos.web.dto.HouseDetailDTO;
 import com.ccarlos.web.dto.HousePictureDTO;
+import com.ccarlos.web.dto.HouseSubscribeDTO;
 import com.ccarlos.web.form.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -24,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +56,9 @@ public class HouseServiceImpl implements IHouseService {
 
     @Autowired
     private HouseTagRepository houseTagRepository;
+
+    @Autowired
+    private HouseSubscribeRespository subscribeRespository;
 
     @Autowired
     private IQiNiuService qiNiuService;
@@ -253,6 +259,14 @@ public class HouseServiceImpl implements IHouseService {
         result.setPictures(pictureDTOS);
         result.setTags(tagList);
 
+        if (LoginUserUtil.getLoginUserId() > 0) { // 已登录用户
+            HouseSubscribe subscribe = subscribeRespository.findByHouseIdAndUserId
+                    (house.getId(), LoginUserUtil.getLoginUserId());
+            if (subscribe != null) {
+                result.setSubscribeStatus(subscribe.getStatus());
+            }
+        }
+
         return ServiceResult.of(result);
     }
 
@@ -407,7 +421,7 @@ public class HouseServiceImpl implements IHouseService {
         return simpleQuery(rentSearch);
     }
 
-    private ServiceMultiResult<HouseDTO> simpleQuery(RentSearch rentSearch){
+    private ServiceMultiResult<HouseDTO> simpleQuery(RentSearch rentSearch) {
         //        Sort sort = new Sort(Sort.Direction.DESC, "lastUpdateTime");
         Sort sort = HouseSort.generateSort(rentSearch.getOrderBy(),
                 rentSearch.getOrderDirection());
@@ -516,4 +530,49 @@ public class HouseServiceImpl implements IHouseService {
         List<HouseDTO> houses = wrapperHouseResult(serviceResult.getResult());
         return new ServiceMultiResult<>(serviceResult.getTotal(), houses);
     }
+
+    @Override
+    @Transactional
+    public ServiceResult addSubscribeOrder(Long houseId) {
+        Long userId = LoginUserUtil.getLoginUserId();
+        HouseSubscribe subscribe = subscribeRespository.findByHouseIdAndUserId(houseId, userId);
+        if (subscribe != null) {
+            return new ServiceResult(false, "已加入预约");
+        }
+
+        House house = houseRepository.findOne(houseId);
+        if (house == null) {
+            return new ServiceResult(false, "查无此房");
+        }
+
+        subscribe = new HouseSubscribe();
+        Date now = new Date();
+        subscribe.setCreateTime(now);
+        subscribe.setLastUpdateTime(now);
+        subscribe.setUserId(userId);
+        subscribe.setHouseId(houseId);
+        subscribe.setStatus(HouseSubscribeStatus.IN_ORDER_LIST.getValue());
+        subscribe.setAdminId(house.getAdminId());
+        subscribeRespository.save(subscribe);
+        return ServiceResult.success();
+    }
+
+    @Override
+    public ServiceMultiResult<Pair<HouseDTO, HouseSubscribe>> querySubscribeList(
+            HouseSubscribeStatus status,
+            int start,
+            int size) {
+        Long userId = LoginUserUtil.getLoginUserId();
+        Pageable pageable = new PageRequest
+                (start / size, size,
+                        new Sort(Sort.Direction.DESC, "createTime"));
+
+        Page<HouseSubscribe> page = subscribeRespository.findAllByUserIdAndStatus
+                (userId, status.getValue(), pageable);
+
+        List<Pair<HouseDTO, HouseSubscribeDTO>> result = new ArrayList<>();
+
+        return null;
+    }
+
 }

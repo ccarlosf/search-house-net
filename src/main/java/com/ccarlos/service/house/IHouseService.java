@@ -1,5 +1,7 @@
 package com.ccarlos.service.house;
 
+import com.ccarlos.base.HouseSubscribeStatus;
+import com.ccarlos.entity.HouseSubscribe;
 import com.ccarlos.service.ServiceMultiResult;
 import com.ccarlos.service.ServiceResult;
 import com.ccarlos.web.dto.HouseDTO;
@@ -7,6 +9,7 @@ import com.ccarlos.web.form.DatatableSearch;
 import com.ccarlos.web.form.HouseForm;
 import com.ccarlos.web.form.MapSearch;
 import com.ccarlos.web.form.RentSearch;
+import org.springframework.data.util.Pair;
 
 /**
  * 房屋管理服务接口
@@ -100,5 +103,19 @@ public interface IHouseService {
      * @return
      */
     ServiceMultiResult<HouseDTO> boundMapQuery(MapSearch mapSearch);
+
+    /**
+     * 加入预约清单
+     *
+     * @param houseId
+     * @return
+     */
+    ServiceResult addSubscribeOrder(Long houseId);
+
+    /**
+     * 获取对应状态的预约列表
+     */
+    ServiceMultiResult<Pair<HouseDTO, HouseSubscribe>> querySubscribeList
+    (HouseSubscribeStatus status, int start, int size);
 
 }
