@@ -18,6 +18,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClients;
@@ -258,6 +259,28 @@ public class AddressServiceImpl implements IAddressService {
             post = new HttpPost(LBS_CREATE_API);
         }
 
+        try {
+            post.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+            HttpResponse response = httpClient.execute(post);
+            String result = EntityUtils.toString(response.getEntity(), "UTF-8");
+            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                logger.error("Can not upload lbs data for response: " + result);
+                return new ServiceResult(false, "Can not upload baidu lbs data");
+            } else {
+                JsonNode jsonNode = objectMapper.readTree(result);
+                int status = jsonNode.get("status").asInt();
+                if (status != 0) {
+                    String message = jsonNode.get("message").asText();
+                    logger.error("Error to upload lbs data for status: {}, and message: {}", status, message);
+                    return new ServiceResult(false, "Error to upload lbs data");
+                } else {
+                    return ServiceResult.success();
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return new ServiceResult(false);
     }
 
@@ -297,6 +320,33 @@ public class AddressServiceImpl implements IAddressService {
 
     @Override
     public ServiceResult removeLbs(Long houseId) {
-        return null;
+        HttpClient httpClient = HttpClients.createDefault();
+        List<NameValuePair> nvps = new ArrayList<>();
+        nvps.add(new BasicNameValuePair("geotable_id", "175730"));
+        nvps.add(new BasicNameValuePair("ak", BAIDU_MAP_KEY));
+        nvps.add(new BasicNameValuePair("houseId", String.valueOf(houseId)));
+
+        HttpPost delete = new HttpPost(LBS_DELETE_API);
+        try {
+            delete.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+            HttpResponse response = httpClient.execute(delete);
+            String result = EntityUtils.toString(response.getEntity(), "UTF-8");
+            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                logger.error("Error to delete lbs data for response: " + result);
+                return new ServiceResult(false);
+            }
+
+            JsonNode jsonNode = objectMapper.readTree(result);
+            int status = jsonNode.get("status").asInt();
+            if (status != 0) {
+                String message = jsonNode.get("message").asText();
+                logger.error("Error to delete lbs data for message: " + message);
+                return new ServiceResult(false, "Error to delete lbs data for: " + message);
+            }
+            return ServiceResult.success();
+        } catch (IOException e) {
+            logger.error("Error to delete lbs data.", e);
+            return new ServiceResult(false);
+        }
     }
 }

@@ -179,10 +179,17 @@ public class SearchServiceImpl implements ISearchService {
             success = deleteAndCreate(totalHit, indexTemplate);
         }
 
-        if (success) {
-            logger.debug("index success with house " + houseId);
-        }
+        ServiceResult serviceResult = addressService.lbsUpload
+                (location.getResult(), house.getStreet() + house.getDistrict(),
+                        city.getCnName() + region.getCnName()
+                                + house.getStreet() + house.getDistrict(),
+                        message.getHouseId(), house.getPrice(), house.getArea());
 
+        if (!success || !serviceResult.isSuccess()) {
+            this.index(message.getHouseId(), message.getRetry() + 1);
+        } else {
+            logger.debug("Index success with house " + houseId);
+        }
         // create
 
         // update
@@ -201,7 +208,10 @@ public class SearchServiceImpl implements ISearchService {
         long deleted = response.getDeleted();
         logger.info("Delete total " + deleted);
 
-        if (deleted <= 0) {
+        ServiceResult serviceResult = addressService.removeLbs(houseId);
+        if (!serviceResult.isSuccess() || deleted <= 0) {
+            logger.warn("Did not remove data from es for response: " + response);
+            // 重新加入消息队列
             this.remove(houseId, message.getRetry() + 1);
         }
     }
