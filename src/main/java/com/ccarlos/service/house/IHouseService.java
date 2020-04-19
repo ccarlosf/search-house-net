@@ -133,8 +133,23 @@ public interface IHouseService {
 
     /**
      * 取消预约
+     *
      * @param houseId
      * @return
      */
     ServiceResult cancelSubscribe(Long houseId);
+
+    /**
+     * 管理员查询预约信息接口
+     *
+     * @param start
+     * @param size
+     */
+    ServiceMultiResult<Pair<HouseDTO, HouseSubscribeDTO>> findSubscribeList
+    (int start, int size);
+
+    /**
+     * 完成预约
+     */
+    ServiceResult finishSubscribe(Long houseId);
 }

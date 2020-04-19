@@ -637,4 +637,34 @@ public class HouseServiceImpl implements IHouseService {
         subscribeRespository.delete(subscribe.getId());
         return ServiceResult.success();
     }
+
+    @Override
+    public ServiceMultiResult<Pair<HouseDTO, HouseSubscribeDTO>> findSubscribeList
+            (int start, int size) {
+        Long userId = LoginUserUtil.getLoginUserId();
+        Pageable pageable = new PageRequest
+                (start / size, size,
+                        new Sort(Sort.Direction.DESC, "orderTime"));
+
+        Page<HouseSubscribe> page = subscribeRespository.findAllByAdminIdAndStatus
+                (userId, HouseSubscribeStatus.IN_ORDER_TIME.getValue(), pageable);
+
+        return wrapper(page);
+    }
+
+    @Override
+    @Transactional
+    public ServiceResult finishSubscribe(Long houseId) {
+        Long adminId = LoginUserUtil.getLoginUserId();
+        HouseSubscribe subscribe = subscribeRespository.findByHouseIdAndAdminId
+                (houseId, adminId);
+        if (subscribe == null) {
+            return new ServiceResult(false, "无预约记录");
+        }
+
+        subscribeRespository.updateStatus(subscribe.getId(),
+                HouseSubscribeStatus.FINISH.getValue());
+        houseRepository.updateWatchTimes(houseId);
+        return ServiceResult.success();
+    }
 }
