@@ -9,8 +9,8 @@ var regionCountMap = {}, // 地区数据
 function load(city, regions, aggData) {
     // 百度地图API功能
     var map = new BMap.Map("allmap", {minZoom: 12}); // 创建实例。设置地图显示12最大级别为城市
-    // var point = new BMap.Point(city.baiduMapLongitude, city.baiduMapLatitude); // 城市中心
-    var point = new BMap.Point(116.404185, 39.915574);
+    var point = new BMap.Point(city.baiduMapLongitude, city.baiduMapLatitude); // 城市中心
+    // var point = new BMap.Point(116.404185, 39.915574);
     map.centerAndZoom(point, 12); // 初始化地图，设置中心点坐标及地图级别
 
     map.addControl(new BMap.NavigationControl({enableGeolocation: true})); // 添加比例尺控件
@@ -135,6 +135,62 @@ function drawRegion(map, regionList) {
             map.zoomIn();
             map.panTo(event.point);
         });
+    }
+
+    if (!customLayer) {
+        customLayer = new BMap.CustomLayer({
+            geotableId: 175730,
+            q: '', // 检索关键字
+            tags: '', // 空格分隔的字符串
+            filter: '', // 过滤条件，参考：http://lbsyun.baidu.com/index.php?title=lbscloud/api/geosearch
+            pointDensityType: BMAP_POINT_DENSITY_HIGH
+        });
+        map.addTileLayer(customLayer); // 添加自定义图层
+        customLayer.addEventListener('onhotspotclick', houseTip); // 单击图层事件
+    }
+
+    function houseTip(e) {
+        var customPoi = e.customPoi; // poi的默认字段
+        var contentPoi = e.content; // poi的自定义字段
+
+        var content =  '<p style="width:280px;margin: 0; line-height: 20px;">地址：' +
+            customPoi.address + '<br/>价格：' + contentPoi.price + '元/月<br/>面积：'
+            + contentPoi.area + '平方米</p>';
+        var opts = {
+            width: 200, // 信息窗口宽度
+            height: 100, // 信息窗口高度
+            title: contentPoi.title, // 信息窗口标题
+            enableMessage: true, // 设置允许信息窗发送信息
+            message: contentPoi.address
+        };
+
+        // 创建信息窗口对象
+        var infoWindow = new BMap.InfoWindow("位置：" + contentPoi.address, opts);
+        var point = new BMap.Point(customPoi.point.lng, customPoi.point.lat);
+
+        // 搜索信息提示框
+        var searchInfoWindow = new BMapLib.SearchInfoWindow(map, content, {
+            title: customPoi.title, // 标题
+            width: 290,
+            height: 60,
+            panel: "panel", // 搜索结果面板
+            enableAutoPan: false, // 关闭自动平移 防止触发mapResize
+            enableSendToPhone: true, // 是否显示发送到手机按钮
+            searchTypes: [
+                BMAPLIB_TAB_SEARCH, // 周边检索
+                // BMAPLIB_TAB_TO_HERE, // 到这里去
+                // BMAPLIB_TAB_FROM_HERE // 从这里出发
+            ]
+        });
+
+        var marker = new BMap.Marker(point); // 创建marker标注
+        marker.addEventListener("click", function (e) { // 点击去除
+            map.removeOverlay(e.target);
+        });
+
+        marker.setAnimation(BMAP_ANIMATION_BOUNCE); // 跳动的动画
+        searchInfoWindow.open(marker);
+        map.addOverlay(marker);
     }
 }
 
