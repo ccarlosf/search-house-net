@@ -16,7 +16,21 @@ nohup ./bin/zookeeper-server-start.sh config/zookeeper.properties &
 5.进入接收消息
 ./bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic hello --from-beginning
 
-6.nginx负载均衡es
+6.配置优化(精确匹配索引名，防止误删除)
+http://192.168.253.138:9200/_cluster/settings
+{
+    "transient": {
+        "action.destructive_requires_name": true
+    }
+}
+
+7.配置优化(索引刷新设置为30s)
+http://192.168.253.138:9200/_all/_settings?preserve_existing=true
+{
+    "index.refresh_interval": "1s"
+}
+
+8.nginx负载均衡es
 ./configure --with-stream
 stream {
     upstream backend {
@@ -32,10 +46,10 @@ stream {
     }
 }
 
-7.elasticsearch 加密
+9.elasticsearch 加密
 printf "es5:$(openssl passwd -crypt elasticsearch)\n" > passwords
 
-8.配置nginx加密elasticsearch,并解决跨域问题
+10.配置nginx加密elasticsearch,并解决跨域问题
 访问路径 http://localhost:9100/?auth_user=es5&auth_password=elasticsearch&base_uri=http://192.168.253.138:8888
  upstream elasticsearch {
       server 192.168.253.138:9200 weight=10;
