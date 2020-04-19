@@ -3,20 +3,20 @@ package com.ccarlos.web.controller.user;
 import com.ccarlos.base.ApiResponse;
 import com.ccarlos.base.HouseSubscribeStatus;
 import com.ccarlos.base.LoginUserUtil;
-import com.ccarlos.entity.HouseSubscribe;
 import com.ccarlos.service.IUserService;
 import com.ccarlos.service.ServiceMultiResult;
 import com.ccarlos.service.ServiceResult;
 import com.ccarlos.service.house.IHouseService;
 import com.ccarlos.web.dto.HouseDTO;
+import com.ccarlos.web.dto.HouseSubscribeDTO;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Date;
 
 @Controller
 public class UserController {
@@ -75,10 +75,52 @@ public class UserController {
             @RequestParam(value = "size", defaultValue = "3") int size,
             @RequestParam(value = "status") int status) {
 
-        ServiceMultiResult<Pair<HouseDTO, HouseSubscribe>> result
+        ServiceMultiResult<Pair<HouseDTO, HouseSubscribeDTO>> result
                 = houseService.querySubscribeList(HouseSubscribeStatus.of(status), start, size);
 
-        return null;
+        if (result.getResultSize() == 0) {
+            return ApiResponse.ofSuccess(result.getResult());
+        }
+
+        ApiResponse response = ApiResponse.ofSuccess(result.getResult());
+        response.setMore(result.getTotal() > (start + size));
+        return response;
+    }
+
+    @PostMapping(value = "api/user/house/subscribe/date")
+    @ResponseBody
+    public ApiResponse subscribeDate(
+            @RequestParam(value = "houseId") Long houseId,
+            @RequestParam(value = "orderTime")
+            @DateTimeFormat(pattern = "yyyy-MM-dd") Date orderTime,
+            @RequestParam(value = "desc", required = false) String desc,
+            @RequestParam(value = "telephone") String telephone
+    ) {
+        if (orderTime == null) {
+            return ApiResponse.ofMessage(HttpStatus.SC_BAD_REQUEST, "请选择预约时间");
+        }
+
+        if (!LoginUserUtil.checkTelephone(telephone)) {
+            return ApiResponse.ofMessage(HttpStatus.SC_BAD_REQUEST, "手机格式不正确");
+        }
+
+        ServiceResult serviceResult = houseService.subscribe(houseId, orderTime, telephone, desc);
+        if (serviceResult.isSuccess()) {
+            return ApiResponse.ofStatus(ApiResponse.Status.SUCCESS);
+        } else {
+            return ApiResponse.ofMessage(HttpStatus.SC_BAD_REQUEST, serviceResult.getMessage());
+        }
+    }
+
+    @DeleteMapping(value = "api/user/house/subscribe")
+    @ResponseBody
+    public ApiResponse cancelSubscribe(@RequestParam(value = "houseId") Long houseId) {
+        ServiceResult serviceResult = houseService.cancelSubscribe(houseId);
+        if (serviceResult.isSuccess()) {
+            return ApiResponse.ofStatus(ApiResponse.Status.SUCCESS);
+        } else {
+            return ApiResponse.ofMessage(HttpStatus.SC_BAD_REQUEST, serviceResult.getMessage());
+        }
     }
 
 }

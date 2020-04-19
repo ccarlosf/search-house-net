@@ -558,7 +558,7 @@ public class HouseServiceImpl implements IHouseService {
     }
 
     @Override
-    public ServiceMultiResult<Pair<HouseDTO, HouseSubscribe>> querySubscribeList(
+    public ServiceMultiResult<Pair<HouseDTO, HouseSubscribeDTO>> querySubscribeList(
             HouseSubscribeStatus status,
             int start,
             int size) {
@@ -570,9 +570,71 @@ public class HouseServiceImpl implements IHouseService {
         Page<HouseSubscribe> page = subscribeRespository.findAllByUserIdAndStatus
                 (userId, status.getValue(), pageable);
 
-        List<Pair<HouseDTO, HouseSubscribeDTO>> result = new ArrayList<>();
-
-        return null;
+        return wrapper(page);
     }
 
+    private ServiceMultiResult<Pair<HouseDTO, HouseSubscribeDTO>> wrapper
+            (Page<HouseSubscribe> page) {
+        List<Pair<HouseDTO, HouseSubscribeDTO>> result = new ArrayList<>();
+
+        if (page.getSize() < 1) {
+            return new ServiceMultiResult<>(page.getTotalElements(), result);
+        }
+
+        List<HouseSubscribeDTO> subscribeDTOS = new ArrayList<>();
+        List<Long> houseIds = new ArrayList<>();
+        page.forEach(houseSubscribe -> {
+            subscribeDTOS.add(modelMapper.map(houseSubscribe, HouseSubscribeDTO.class));
+            houseIds.add(houseSubscribe.getHouseId());
+        });
+
+        Map<Long, HouseDTO> idToHouseMap = new HashMap<>();
+        Iterable<House> houses = houseRepository.findAll(houseIds);
+        houses.forEach(house -> {
+            idToHouseMap.put(house.getId(), modelMapper.map(house, HouseDTO.class));
+        });
+
+        for (HouseSubscribeDTO subscribeDTO : subscribeDTOS) {
+            Pair<HouseDTO, HouseSubscribeDTO> pair = Pair.of
+                    (idToHouseMap.get(subscribeDTO.getHouseId()), subscribeDTO);
+            result.add(pair);
+        }
+
+        return new ServiceMultiResult<>(page.getTotalElements(), result);
+    }
+
+    @Override
+    @Transactional
+    public ServiceResult subscribe(Long houseId, Date orderTime, String telephone, String desc) {
+        Long userId = LoginUserUtil.getLoginUserId();
+        HouseSubscribe subscribe = subscribeRespository.findByHouseIdAndUserId(houseId, userId);
+        if (subscribe == null) {
+            return new ServiceResult(false, "无预约记录");
+        }
+
+        if (subscribe.getStatus() != HouseSubscribeStatus.IN_ORDER_LIST.getValue()) {
+            return new ServiceResult(false, "无法预约");
+        }
+
+        subscribe.setStatus(HouseSubscribeStatus.IN_ORDER_TIME.getValue());
+        subscribe.setLastUpdateTime(new Date());
+        subscribe.setTelephone(telephone);
+        subscribe.setDesc(desc);
+        subscribe.setOrderTime(orderTime);
+        subscribeRespository.save(subscribe);
+        return ServiceResult.success();
+    }
+
+    @Override
+    @Transactional
+    public ServiceResult cancelSubscribe(Long houseId) {
+        Long userId = LoginUserUtil.getLoginUserId();
+        HouseSubscribe subscribe = subscribeRespository.findByHouseIdAndUserId(houseId, userId);
+        if (subscribe == null) {
+            return new ServiceResult(false, "无预约记录");
+        }
+
+        subscribeRespository.delete(subscribe.getId());
+        return ServiceResult.success();
+    }
 }
