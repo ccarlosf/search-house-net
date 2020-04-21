@@ -119,3 +119,9 @@ server {
        }
      }
 
+11-6 基于SpringSchedule的监控任务
+http://192.168.253.138:8888/_cluster/health
+if ($request_uri ~ ^/_cluster/health$) {
+                return 598;
+            }
+
