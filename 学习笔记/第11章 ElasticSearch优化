@@ -80,3 +80,42 @@ printf "es5:$(openssl passwd -crypt elasticsearch)\n" > passwords
        }
      }
 
+11-5 安全控制_选择性认证
+server {
+        listen       8888;
+        server_name  localhost;
+
+        location @general {
+             proxy_pass http://elasticsearch;
+             proxy_redirect off;
+        }
+
+        location @need_protection {
+             auth_basic "Protection";
+             auth_basic_user_file /usr/local/nginx/password/passwords;
+
+             proxy_pass http://elasticsearch;
+             proxy_redirect off;
+        }
+
+        location / {
+        if ($request_method = 'OPTIONS') {
+           add_header 'Access-Control-Allow-Origin' '*';
+           add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, OPTIONS';
+           add_header 'Access-Control-Allow-Headers' 'Authorization,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
+           add_header 'Access-Control-Max-Age' 172800;
+           add_header 'Content-Type' 'text-plain; charset=utf-8';
+           add_header 'Content-Length' 0;
+           return 204;
+        }
+            error_page 598 = @general;
+            error_page 599 = @need_protection;
+
+            if ($request_uri ~ ^/_cat/.*$) {
+                return 598;
+            }
+            return 599;
+
+       }
+     }
+
