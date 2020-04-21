@@ -8,6 +8,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +27,10 @@ public class ESMonitor {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Scheduled(fixedDelay = 5000)
+    @Autowired
+    private JavaMailSender mailSender;
+
+//    @Scheduled(fixedDelay = 5000)
     public void healthCheck() {
         HttpClient httpClient = HttpClients.createDefault();
 
@@ -57,6 +62,16 @@ public class ESMonitor {
                         message = "Unknown ES status from server for: " + status + ". Please check it.";
                         break;
                 }
+
+                if (!isNormal) {
+                    sendAlertMessage(message);
+                }
+
+                // 获取集群节点
+                int totalNodes = result.get("number_of_nodes").asInt();
+                if (totalNodes < 5) {
+                    sendAlertMessage("我们的ES节点丢了！");
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -64,4 +79,13 @@ public class ESMonitor {
 
     }
 
+    private void sendAlertMessage(String message) {
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setFrom("@163.com");
+        mailMessage.setTo("@163.com");
+        mailMessage.setSubject("【警告】ES服务监控");
+        mailMessage.setText(message);
+
+        mailSender.send(mailMessage);
+    }
 }
