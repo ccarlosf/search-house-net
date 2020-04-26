@@ -1,0 +1,81 @@
+1. 创建目录patterns
+mkdir patterns
+cd patterns
+vim nginx
+vim logstash.conf
+
+手敲加备份
+NGINXACCESS %{IPORHOST:CLIENTIP} %{HTTPDUSER:ident} %{USER:auth} \[%{HTTPDATE:timestamp}\] "(?:%{WORD:verb} %{URIPATH:uri}%{URIPARAM:param}(?: HTTP/%{number:httpversion})?|%{DATA:rawrequest})" %[NUMBER:response] (?"%{NUMBER:bytes}|-) %{QS:referrer} %{QS:agent} %{QS:x_forwarded_for}
+input {
+        file {
+              path => ["/usr/local/nginx/logs/access.log"]
+              type => "nginx_access"
+              #start_position => "beginning"
+        }
+}
+
+filter {
+         if [type] == "nginx_access" {
+                grok {
+                        patterns_dir => "/usr/local/logstash-5.5.2/config/patterns"
+
+                        match => {
+                                "message" => "%{NGINXACCESS}"
+                        }
+                }
+
+                 date {
+                        match => ["timestamp", "dd/MM/YYYY:HH:mm:ss Z"]
+                 }
+
+         }
+}
+
+output {
+       stdout {
+              codec => rubydebug
+      }
+}
+~
+
+备份
+NGINXACCESS %{IPORHOST:clientip} %{HTTPDUSER:ident} %{USER:auth}\[%{HTTPDATE:timestamp}\]
+"(?:%{WORD:verb} %{URIPATH:uri}%{URIPARAM:Param} (?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest} )"
+%{NUMBER:response} (?:%{NUMBER:bytes} |-)
+
+NGINXACCESSLOG %{NGINXACCESS} %{QS:referrer} %{QS:agent} %{QS:x_forward_for}
+
+
+配置
+NXACCESS %{IPORHOST:clientip} %{HTTPDUSER:ident} %{USER:auth}\[%{HTTPDATE:timestamp}\]
+"(?:%{WORD:verb} %{URIPATH:uri}%{URIPARAM:Param} (?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest} )"
+%{NUMBER:response} (?:%{NUMBER:bytes} |-)
+
+NGINXACCESSLOG %{NGINXACCESS} %{QS:referrer} %{QS:agent} %{QS:x_forward_for
+
+input{
+        file{
+                path => ["/usr/local/nginx/logs/access.log"]
+                type => "nginx_access"
+                start_position => "beginning"
+        }
+}
+
+output{
+
+        elasticsearch {
+#这里记得写的是hosts，因为可能会是集群的 elasticsearch，但是配置的之后只要写上主节点就行了
+        hosts => "192.168.253.138:9200"
+#规定存储日志的索引规则，动态配置，方便管理
+        index => "logstash_%{type}=%{+YYYY.MM.dd}"
+# type 里的参数 就是上面配置的 nginx_access
+                document_type => "%{type}"
+    }
+
+    stdout{
+        codec=>rubydebug
+    }
+}
+~
+~
+
