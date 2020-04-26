@@ -1,0 +1,103 @@
+12-2 Logstash应用_日志采集
+1.解压
+tar -zxvf logstash-5.5.2.tar.gz
+
+2.标准运行 标准输入、标准输出
+./bin/logstash -e 'input { stdin {} } output { stdout {} }'
+
+3.编辑logstash配置文件
+vi logstash.conf
+input {
+        file {
+              path => ['']
+              type => ""
+              start_position => "beginning"
+        }
+}
+
+output {
+       stdout {
+              codec => rubydehug
+      }
+}
+
+4.安装Nginx
+(1) 安装gcc环境
+yum install gcc-c++
+(2) 安装PCRE库，用于解析正则表达式
+yum install -y pcre pcre-devel
+(3) zlib压缩和解压缩依赖
+yum install -y zlib zlib-devel
+(4) SSL安全的加密的套接字协议层，用于HTTP安全传输，也就是https
+yum install -y openssl openssl-devel
+(5)解压 tar -zxvf nginx-1.16.1.tar.gz
+(6) 编译之前，先创建nginx临时目录，如果不创建，在启动nginx的过程中会报错
+mkdir /var/temp/nginx -p
+(7) 在nginx目录，输入如下命令进行配置，目的是为了创建makefile文件
+./configure  \
+--prefix=/usr/local/nginx  \
+--pid-path=/var/run/nginx/nginx.pid  \
+--lock-path=/var/lock/nginx.lock  \
+--error-log-path=/var/log/nginx/error.log  \
+--http-log-path=/var/log/nginx/access.log  \
+--with-http_gzip_static_module  \
+--http-client-body-temp-path=/var/tmp/nginx/client  \
+--http-proxy-temp-path=/var/tmp/nginx/proxy  \
+--http-fastcgi-temp-path=/var/tmp/nginx/fastcgi  \
+--http-uwsgi-temp-path=/var/tmp/nginx/uwsgi  \
+--http-scgi-temp-path=/var/tmp/nginx/scgi  \
+--with-http_ssl_module
+(8) make编译 make
+(9) 安装 make install
+(10) 进入sbin目录启动nginx
+./nginx
+停止 ./nginx -s stop
+重新加载 ./nginx -s reload
+(11) nginx.pid 打开失败以及失效的解决方案
+mkdir /var/run/nginx
+./nginx -c /usr/local/nginx/conf/nginx.conf
+
+5. nginx反向代理logstash
+http://192.168.253.144:8088/
+
+    #gzip  on;
+     upstream xunwu {
+               server 192.168.1.4:8080 weight=10;
+     }
+
+    server {
+        listen       8088;
+        server_name  localhost;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / {
+                proxy_pass http://xunwu;
+                proxy_redirect off;
+        }
+
+
+nginx.pid 打开失败以及失效的解决方案
+mkdir /var/run/nginx
+./nginx -c /usr/local/nginx/conf/nginx.conf
+
+编辑logstash配置
+vim logstash.conf
+input {
+        file {
+              path => ["/usr/local/nginx/logs/access.log"]
+              type => "nginx_access"
+              start_position => "beginning"
+        }
+}
+
+output {
+       stdout {
+              codec => rubydebug
+      }
+}
+
+启动logstash
+./bin/logstash -f config/logstash.conf
