@@ -1,0 +1,8 @@
+1.解压缩kibana-5.5.2-linux-x86_64.tar.gz
+tar -zxvf kibana-5.5.2-linux-x86_64.tar.gz
+mv kibana-5.5.2-linux-x86_64 /usr/local
+
+2.编辑kibana配置
+vim config/kibana.yml
+server.host: "0.0.0.0"
+elasticsearch.url: "http://192.168.253.138:9200"
