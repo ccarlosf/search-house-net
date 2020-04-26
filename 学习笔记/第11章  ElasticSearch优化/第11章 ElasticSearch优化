@@ -50,7 +50,8 @@ stream {
 printf "es5:$(openssl passwd -crypt elasticsearch)\n" > passwords
 
 10.配置nginx加密elasticsearch,并解决跨域问题
-访问路径 http://localhost:9100/?auth_user=es5&auth_password=elasticsearch&base_uri=http://192.168.253.138:8888
+访问路径
+http://localhost:9100/?auth_user=es5&auth_password=elasticsearch&base_uri=http://192.168.253.138:8888
  upstream elasticsearch {
       server 192.168.253.138:9200 weight=10;
       server 192.168.253.139:9200 weight=10;
@@ -124,4 +125,3 @@ http://192.168.253.138:8888/_cluster/health
 if ($request_uri ~ ^/_cluster/health$) {
                 return 598;
             }
-
